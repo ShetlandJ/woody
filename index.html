@@ -33,7 +33,7 @@
     }
 
     /* Desktop sizing */
-    @media (min-width: 601px) {
+    @media (min-width: 769px) {
       .vessel-container {
         width: 92vw;
         max-width: 1400px;
@@ -41,7 +41,7 @@
     }
 
     /* Mobile: fixed large width, scrollable */
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .viewport {
         overflow-x: auto;
         overflow-y: hidden;
@@ -77,7 +77,7 @@
       z-index: 10;
     }
 
-    @media (max-width: 600px) {
+    @media (max-width: 768px) {
       .pin { width: 28px; height: 28px; }
     }
 
@@ -294,7 +294,7 @@
 
   <script>
     const COLOURS = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#64748b'];
-    const isMobile = window.matchMedia('(max-width: 600px)').matches;
+    const isMobile = window.matchMedia('(max-width: 768px)').matches;
 
     const viewport = document.getElementById('viewport');
     const vessel = document.getElementById('vessel');

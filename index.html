@@ -292,6 +292,30 @@
         <path d="M 970 248 L 970 210 L 1060 210 L 1060 248" stroke="#d0d0d0" stroke-width="1.1" stroke-linejoin="round"/>
         <circle cx="1015" cy="238" r="10" stroke="#d0d0d0" stroke-width="0.5" stroke-dasharray="3 2"/>
 
+        <!-- Zone labels -->
+        <g class="zone-labels" fill="none">
+          <circle cx="140" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="140" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">1</text>
+
+          <circle cx="330" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="330" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">2</text>
+
+          <circle cx="550" cy="185" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="550" y="189" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">3</text>
+
+          <circle cx="710" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="710" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">4</text>
+
+          <circle cx="855" cy="220" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="855" y="224" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">5</text>
+
+          <circle cx="1015" cy="228" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="1015" y="232" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">6</text>
+
+          <circle cx="590" cy="310" r="12" stroke="#555" stroke-width="0.8"/>
+          <text x="590" y="314" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">7</text>
+        </g>
+
         <!-- Waterlines -->
         <path class="waterline" d="M 30 300 Q 80 293 150 298 L 900 298 Q 1000 293 1100 300 Q 1140 305 1180 300" stroke="#3a4550" stroke-width="0.7"/>
         <path class="waterline" d="M 20 318 Q 80 312 200 315 L 950 315 Q 1050 312 1120 318 Q 1150 322 1180 318" stroke="#2e363d" stroke-width="0.5" style="animation-delay:0.5s"/>
@@ -326,6 +350,25 @@
 
     if (isMobile) hint.textContent = 'Swipe to browse \u2022 Tap to add a note';
 
+    // Zone definitions — x% boundaries (above deck), zone 7 = hull (below deck)
+    const ZONES = [
+      { id: 1, name: 'Bow',               maxX: 19 },
+      { id: 2, name: 'Forward structure',  maxX: 36 },
+      { id: 3, name: 'Bridge',             maxX: 55 },
+      { id: 4, name: 'Funnel',             maxX: 64 },
+      { id: 5, name: 'Aft structure',      maxX: 80 },
+      { id: 6, name: 'Stern',              maxX: 100 },
+    ];
+    const DECK_LINE_Y = 62; // y% where hull begins
+
+    function getZone(x, y) {
+      if (y >= DECK_LINE_Y) return { id: 7, name: 'Hull' };
+      for (const z of ZONES) {
+        if (x <= z.maxX) return z;
+      }
+      return { id: 6, name: 'Stern' };
+    }
+
     let selectedColour = COLOURS[0];
     let pendingX = 0;
     let pendingY = 0;
@@ -345,8 +388,15 @@
       coloursRow.appendChild(swatch);
     });
 
-    // Restore saved pins
-    pins.forEach(p => placePin(p.x, p.y, p.colour, p.note, false));
+    // Restore saved pins (migrate old pins without zone)
+    pins.forEach(p => {
+      if (!p.zone) {
+        const z = getZone(p.x, p.y);
+        p.zone = z.id;
+        p.zoneName = z.name;
+      }
+      placePin(p, false);
+    });
 
     // --- Distinguish tap from drag on mobile ---
     let touchStartX = 0;
@@ -413,15 +463,17 @@
       const note = noteInput.value.trim();
       if (!note) { noteInput.focus(); return; }
 
-      const pin = { x: pendingX, y: pendingY, colour: selectedColour, note };
+      const zone = getZone(pendingX, pendingY);
+      const pin = { x: pendingX, y: pendingY, colour: selectedColour, note, zone: zone.id, zoneName: zone.name };
       pins.push(pin);
       localStorage.setItem('woody_pins', JSON.stringify(pins));
-      placePin(pin.x, pin.y, pin.colour, pin.note, true);
+      placePin(pin, true);
       closeTooltip();
       updateExportBtn();
     }
 
-    function placePin(x, y, colour, note, animate) {
+    function placePin(pin, animate) {
+      const { x, y, colour, note, zone, zoneName } = pin;
       const el = document.createElement('div');
       el.className = 'pin';
       el.style.left = x + '%';
@@ -432,13 +484,12 @@
 
       const label = document.createElement('div');
       label.className = 'pin-note';
-      label.textContent = note;
+      label.textContent = `[${zone}] ${note}`;
       el.appendChild(label);
 
       // Tap pin on mobile to show note
       el.addEventListener('click', (e) => {
         e.stopPropagation();
-        // Toggle active on mobile
         if (isMobile) {
           const wasActive = el.classList.contains('active');
           document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
@@ -467,10 +518,10 @@
     }
 
     function exportCSV() {
-      const header = 'Note,Colour,X%,Y%';
+      const header = 'Zone,Zone Name,Note,Colour,X%,Y%';
       const rows = pins.map(p => {
         const note = '"' + p.note.replace(/"/g, '""') + '"';
-        return [note, p.colour, p.x.toFixed(2), p.y.toFixed(2)].join(',');
+        return [p.zone, '"' + (p.zoneName || '') + '"', note, p.colour, p.x.toFixed(2), p.y.toFixed(2)].join(',');
       });
       const csv = header + '\n' + rows.join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>Woody Boat</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      background: #fff;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'DM Mono', monospace;
+      overflow: hidden;
+    }
+
+    .vessel-container {
+      width: 92vw;
+      max-width: 1400px;
+      position: relative;
+      cursor: crosshair;
+    }
+
+    .vessel-container svg {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Pins placed on the ship */
+    .pin {
+      position: absolute;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      border: 2px solid #fff;
+      box-shadow: 0 1px 6px rgba(0,0,0,0.25);
+      transform: translate(-50%, -50%) scale(0);
+      animation: pinDrop 0.3s ease-out forwards;
+      cursor: pointer;
+      z-index: 10;
+    }
+
+    @keyframes pinDrop {
+      0% { transform: translate(-50%, -50%) scale(0); }
+      70% { transform: translate(-50%, -50%) scale(1.2); }
+      100% { transform: translate(-50%, -50%) scale(1); }
+    }
+
+    .pin-note {
+      position: absolute;
+      bottom: calc(100% + 6px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: #fff;
+      border: 1px solid #e0e0e0;
+      border-radius: 4px;
+      padding: 4px 8px;
+      font-size: 11px;
+      color: #333;
+      white-space: nowrap;
+      max-width: 200px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      pointer-events: none;
+      display: none;
+    }
+
+    .pin:hover .pin-note {
+      display: block;
+    }
+
+    /* Tooltip / form that appears on tap */
+    .tooltip {
+      position: absolute;
+      z-index: 100;
+      background: #fff;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+      padding: 14px;
+      width: 220px;
+      display: none;
+    }
+
+    .tooltip.open { display: block; }
+
+    .tooltip-arrow {
+      position: absolute;
+      top: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 12px;
+      height: 6px;
+      overflow: hidden;
+    }
+
+    .tooltip-arrow::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 50%;
+      transform: translateX(-50%) rotate(45deg);
+      width: 8px;
+      height: 8px;
+      background: #fff;
+      border: 1px solid #ddd;
+    }
+
+    .colour-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+
+    .colour-swatch {
+      width: 26px;
+      height: 26px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.15s;
+    }
+
+    .colour-swatch:hover { transform: scale(1.15); }
+    .colour-swatch.selected { border-color: #1a1a1a; }
+
+    .tooltip input[type="text"] {
+      width: 100%;
+      border: 1px solid #ddd;
+      border-radius: 5px;
+      padding: 7px 10px;
+      font-family: inherit;
+      font-size: 12px;
+      outline: none;
+      margin-bottom: 10px;
+    }
+
+    .tooltip input[type="text"]:focus {
+      border-color: #888;
+    }
+
+    .tooltip-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .tooltip-actions button {
+      flex: 1;
+      padding: 6px 0;
+      border-radius: 5px;
+      border: 1px solid #ddd;
+      background: #fff;
+      font-family: inherit;
+      font-size: 11px;
+      cursor: pointer;
+    }
+
+    .tooltip-actions button.primary {
+      background: #1a1a1a;
+      color: #fff;
+      border-color: #1a1a1a;
+    }
+
+    .tooltip-actions button:hover { opacity: 0.85; }
+
+    /* Instruction hint */
+    .hint {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 12px;
+      color: #bbb;
+      pointer-events: none;
+    }
+
+    /* Waterline animation */
+    .waterline {
+      stroke-dasharray: 12 6;
+      animation: waterflow 2s linear infinite;
+    }
+
+    @keyframes waterflow {
+      to { stroke-dashoffset: -18; }
+    }
+  </style>
+</head>
+<body>
+  <div class="vessel-container" id="vessel">
+    <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" fill="none">
+
+      <!-- Hull -->
+      <path d="M 80 250 L 200 250 L 200 220 L 980 220 L 980 250 L 1100 250"
+        stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/>
+      <path d="M 80 250 Q 80 300 130 325 L 300 355 Q 400 362 600 365 Q 800 362 950 350 L 1060 325 Q 1100 300 1100 250"
+        stroke="#1a1a1a" stroke-width="2"/>
+      <line x1="95" y1="248" x2="1095" y2="248" stroke="#1a1a1a" stroke-width="0.6"/>
+
+      <!-- Bow -->
+      <path d="M 80 250 L 80 175 L 100 170 L 200 170 L 200 220" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
+      <line x1="140" y1="170" x2="140" y2="80" stroke="#1a1a1a" stroke-width="1"/>
+      <line x1="125" y1="95" x2="155" y2="95" stroke="#1a1a1a" stroke-width="0.7"/>
+
+      <!-- Forward structure -->
+      <path d="M 260 248 L 260 185 L 400 185 L 400 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+      <line x1="270" y1="210" x2="390" y2="210" stroke="#1a1a1a" stroke-width="0.5"/>
+      <line x1="270" y1="230" x2="390" y2="230" stroke="#1a1a1a" stroke-width="0.5"/>
+
+      <!-- Bridge -->
+      <path d="M 460 248 L 460 155 L 640 155 L 640 248" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
+      <path d="M 480 155 L 480 115 L 620 115 L 620 155" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M 510 115 L 510 90 L 590 90 L 590 115" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
+      <rect x="475" y="163" width="150" height="12" rx="2" stroke="#1a1a1a" stroke-width="0.7"/>
+      <line x1="550" y1="90" x2="550" y2="30" stroke="#1a1a1a" stroke-width="1.2"/>
+      <line x1="530" y1="42" x2="570" y2="42" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+
+      <!-- Funnel -->
+      <path d="M 680 248 L 680 170 L 740 170 L 740 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+      <path d="M 685 170 L 685 155 L 735 155 L 735 170" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
+
+      <!-- Aft structure -->
+      <path d="M 790 248 L 790 190 L 920 190 L 920 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+      <line x1="855" y1="190" x2="855" y2="120" stroke="#1a1a1a" stroke-width="0.9"/>
+      <line x1="840" y1="132" x2="870" y2="132" stroke="#1a1a1a" stroke-width="0.7"/>
+
+      <!-- Stern / flight deck -->
+      <path d="M 970 248 L 970 210 L 1060 210 L 1060 248" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
+      <circle cx="1015" cy="238" r="10" stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="3 2"/>
+
+      <!-- Waterlines -->
+      <path class="waterline" d="M 30 300 Q 80 293 150 298 L 900 298 Q 1000 293 1100 300 Q 1140 305 1180 300" stroke="#c0c8d0" stroke-width="0.7"/>
+      <path class="waterline" d="M 20 318 Q 80 312 200 315 L 950 315 Q 1050 312 1120 318 Q 1150 322 1180 318" stroke="#d8dde4" stroke-width="0.5" style="animation-delay:0.5s"/>
+    </svg>
+
+    <!-- Tooltip form -->
+    <div class="tooltip" id="tooltip">
+      <div class="tooltip-arrow"></div>
+      <div class="colour-row" id="colours"></div>
+      <input type="text" id="note-input" placeholder="Add a note..." maxlength="80" />
+      <div class="tooltip-actions">
+        <button onclick="closeTooltip()">Cancel</button>
+        <button class="primary" onclick="savePin()">Save</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="hint">Tap on the ship to add a note</div>
+
+  <script>
+    const COLOURS = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#64748b'];
+
+    const vessel = document.getElementById('vessel');
+    const tooltip = document.getElementById('tooltip');
+    const noteInput = document.getElementById('note-input');
+    const coloursRow = document.getElementById('colours');
+
+    let selectedColour = COLOURS[0];
+    let pendingX = 0;
+    let pendingY = 0;
+    let pins = JSON.parse(localStorage.getItem('woody_pins') || '[]');
+
+    // Build colour swatches
+    COLOURS.forEach((c, i) => {
+      const swatch = document.createElement('div');
+      swatch.className = 'colour-swatch' + (i === 0 ? ' selected' : '');
+      swatch.style.background = c;
+      swatch.addEventListener('click', (e) => {
+        e.stopPropagation();
+        document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
+        swatch.classList.add('selected');
+        selectedColour = c;
+      });
+      coloursRow.appendChild(swatch);
+    });
+
+    // Restore saved pins
+    pins.forEach(p => placePin(p.x, p.y, p.colour, p.note, false));
+
+    // Tap on vessel to start placing a pin
+    vessel.addEventListener('click', (e) => {
+      if (e.target.closest('.tooltip') || e.target.closest('.pin')) return;
+
+      const rect = vessel.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width) * 100;
+      const y = ((e.clientY - rect.top) / rect.height) * 100;
+
+      pendingX = x;
+      pendingY = y;
+
+      // Position tooltip above click point
+      tooltip.style.left = `calc(${x}% - 110px)`;
+      tooltip.style.top = `calc(${y}% - 140px)`;
+      tooltip.classList.add('open');
+      noteInput.value = '';
+      noteInput.focus();
+    });
+
+    noteInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') savePin();
+      if (e.key === 'Escape') closeTooltip();
+    });
+
+    function closeTooltip() {
+      tooltip.classList.remove('open');
+    }
+
+    function savePin() {
+      const note = noteInput.value.trim();
+      if (!note) { noteInput.focus(); return; }
+
+      const pin = { x: pendingX, y: pendingY, colour: selectedColour, note };
+      pins.push(pin);
+      localStorage.setItem('woody_pins', JSON.stringify(pins));
+      placePin(pin.x, pin.y, pin.colour, pin.note, true);
+      closeTooltip();
+    }
+
+    function placePin(x, y, colour, note, animate) {
+      const el = document.createElement('div');
+      el.className = 'pin';
+      el.style.left = x + '%';
+      el.style.top = y + '%';
+      el.style.background = colour;
+      if (!animate) el.style.animation = 'none';
+      if (!animate) el.style.transform = 'translate(-50%, -50%) scale(1)';
+
+      const label = document.createElement('div');
+      label.className = 'pin-note';
+      label.textContent = note;
+      el.appendChild(label);
+
+      // Long press / right click to delete
+      el.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        el.remove();
+        pins = pins.filter(p => !(p.x === x && p.y === y && p.note === note));
+        localStorage.setItem('woody_pins', JSON.stringify(pins));
+      });
+
+      vessel.appendChild(el);
+    }
+  </script>
+</body>
+</html>

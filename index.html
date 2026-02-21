@@ -209,6 +209,26 @@
 
     .tooltip-actions button:hover { opacity: 0.85; }
 
+    /* Export button */
+    .export-btn {
+      position: fixed;
+      top: 16px;
+      right: 16px;
+      background: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      z-index: 50;
+      display: none;
+    }
+
+    .export-btn:hover { background: #333; }
+    .export-btn.visible { display: block; }
+
     /* Hint */
     .hint {
       position: fixed;
@@ -290,6 +310,7 @@
     </div>
   </div>
 
+  <button class="export-btn" id="export-btn" onclick="exportCSV()">Export CSV</button>
   <div class="hint" id="hint">Tap on the ship to add a note</div>
 
   <script>
@@ -397,6 +418,7 @@
       localStorage.setItem('woody_pins', JSON.stringify(pins));
       placePin(pin.x, pin.y, pin.colour, pin.note, true);
       closeTooltip();
+      updateExportBtn();
     }
 
     function placePin(x, y, colour, note, animate) {
@@ -431,11 +453,36 @@
           el.remove();
           pins = pins.filter(p => !(p.x === x && p.y === y && p.note === note));
           localStorage.setItem('woody_pins', JSON.stringify(pins));
+          updateExportBtn();
         }
       });
 
       vessel.appendChild(el);
     }
+
+    const exportBtn = document.getElementById('export-btn');
+
+    function updateExportBtn() {
+      exportBtn.classList.toggle('visible', pins.length > 0);
+    }
+
+    function exportCSV() {
+      const header = 'Note,Colour,X%,Y%';
+      const rows = pins.map(p => {
+        const note = '"' + p.note.replace(/"/g, '""') + '"';
+        return [note, p.colour, p.x.toFixed(2), p.y.toFixed(2)].join(',');
+      });
+      const csv = header + '\n' + rows.join('\n');
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'woody-notes.csv';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    updateExportBtn();
 
     // Scroll to middle on mobile so ship is centred-ish
     if (isMobile) {

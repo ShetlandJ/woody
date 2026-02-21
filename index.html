@@ -11,19 +11,50 @@
 
     body {
       background: #fff;
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      height: 100vh;
+      height: 100dvh;
       font-family: 'DM Mono', monospace;
       overflow: hidden;
     }
 
+    /* Desktop: centred as before */
+    .viewport {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
     .vessel-container {
-      width: 92vw;
-      max-width: 1400px;
       position: relative;
       cursor: crosshair;
+    }
+
+    /* Desktop sizing */
+    @media (min-width: 601px) {
+      .vessel-container {
+        width: 92vw;
+        max-width: 1400px;
+      }
+    }
+
+    /* Mobile: fixed large width, scrollable */
+    @media (max-width: 600px) {
+      .viewport {
+        overflow-x: auto;
+        overflow-y: hidden;
+        -webkit-overflow-scrolling: touch;
+        align-items: center;
+        justify-content: flex-start;
+      }
+
+      .vessel-container {
+        width: 1100px;
+        min-width: 1100px;
+        padding: 0 20px;
+      }
     }
 
     .vessel-container svg {
@@ -32,11 +63,11 @@
       display: block;
     }
 
-    /* Pins placed on the ship */
+    /* Pins */
     .pin {
       position: absolute;
-      width: 20px;
-      height: 20px;
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       border: 2px solid #fff;
       box-shadow: 0 1px 6px rgba(0,0,0,0.25);
@@ -44,6 +75,10 @@
       animation: pinDrop 0.3s ease-out forwards;
       cursor: pointer;
       z-index: 10;
+    }
+
+    @media (max-width: 600px) {
+      .pin { width: 28px; height: 28px; }
     }
 
     @keyframes pinDrop {
@@ -72,11 +107,12 @@
       display: none;
     }
 
-    .pin:hover .pin-note {
+    .pin:hover .pin-note,
+    .pin.active .pin-note {
       display: block;
     }
 
-    /* Tooltip / form that appears on tap */
+    /* Tooltip form */
     .tooltip {
       position: absolute;
       z-index: 100;
@@ -137,7 +173,7 @@
       border-radius: 5px;
       padding: 7px 10px;
       font-family: inherit;
-      font-size: 12px;
+      font-size: 14px;
       outline: none;
       margin-bottom: 10px;
     }
@@ -153,12 +189,12 @@
 
     .tooltip-actions button {
       flex: 1;
-      padding: 6px 0;
+      padding: 8px 0;
       border-radius: 5px;
       border: 1px solid #ddd;
       background: #fff;
       font-family: inherit;
-      font-size: 11px;
+      font-size: 12px;
       cursor: pointer;
     }
 
@@ -170,7 +206,7 @@
 
     .tooltip-actions button:hover { opacity: 0.85; }
 
-    /* Instruction hint */
+    /* Hint */
     .hint {
       position: fixed;
       bottom: 20px;
@@ -179,9 +215,10 @@
       font-size: 12px;
       color: #bbb;
       pointer-events: none;
+      white-space: nowrap;
     }
 
-    /* Waterline animation */
+    /* Waterline */
     .waterline {
       stroke-dasharray: 12 6;
       animation: waterflow 2s linear infinite;
@@ -193,73 +230,77 @@
   </style>
 </head>
 <body>
-  <div class="vessel-container" id="vessel">
-    <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" fill="none">
+  <div class="viewport" id="viewport">
+    <div class="vessel-container" id="vessel">
+      <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" fill="none">
+        <!-- Hull -->
+        <path d="M 80 250 L 200 250 L 200 220 L 980 220 L 980 250 L 1100 250" stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/>
+        <path d="M 80 250 Q 80 300 130 325 L 300 355 Q 400 362 600 365 Q 800 362 950 350 L 1060 325 Q 1100 300 1100 250" stroke="#1a1a1a" stroke-width="2"/>
+        <line x1="95" y1="248" x2="1095" y2="248" stroke="#1a1a1a" stroke-width="0.6"/>
 
-      <!-- Hull -->
-      <path d="M 80 250 L 200 250 L 200 220 L 980 220 L 980 250 L 1100 250"
-        stroke="#1a1a1a" stroke-width="1.8" stroke-linejoin="round"/>
-      <path d="M 80 250 Q 80 300 130 325 L 300 355 Q 400 362 600 365 Q 800 362 950 350 L 1060 325 Q 1100 300 1100 250"
-        stroke="#1a1a1a" stroke-width="2"/>
-      <line x1="95" y1="248" x2="1095" y2="248" stroke="#1a1a1a" stroke-width="0.6"/>
+        <!-- Bow -->
+        <path d="M 80 250 L 80 175 L 100 170 L 200 170 L 200 220" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
+        <line x1="140" y1="170" x2="140" y2="80" stroke="#1a1a1a" stroke-width="1"/>
+        <line x1="125" y1="95" x2="155" y2="95" stroke="#1a1a1a" stroke-width="0.7"/>
 
-      <!-- Bow -->
-      <path d="M 80 250 L 80 175 L 100 170 L 200 170 L 200 220" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
-      <line x1="140" y1="170" x2="140" y2="80" stroke="#1a1a1a" stroke-width="1"/>
-      <line x1="125" y1="95" x2="155" y2="95" stroke="#1a1a1a" stroke-width="0.7"/>
+        <!-- Forward structure -->
+        <path d="M 260 248 L 260 185 L 400 185 L 400 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+        <line x1="270" y1="210" x2="390" y2="210" stroke="#1a1a1a" stroke-width="0.5"/>
+        <line x1="270" y1="230" x2="390" y2="230" stroke="#1a1a1a" stroke-width="0.5"/>
 
-      <!-- Forward structure -->
-      <path d="M 260 248 L 260 185 L 400 185 L 400 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
-      <line x1="270" y1="210" x2="390" y2="210" stroke="#1a1a1a" stroke-width="0.5"/>
-      <line x1="270" y1="230" x2="390" y2="230" stroke="#1a1a1a" stroke-width="0.5"/>
+        <!-- Bridge -->
+        <path d="M 460 248 L 460 155 L 640 155 L 640 248" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
+        <path d="M 480 155 L 480 115 L 620 115 L 620 155" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
+        <path d="M 510 115 L 510 90 L 590 90 L 590 115" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
+        <rect x="475" y="163" width="150" height="12" rx="2" stroke="#1a1a1a" stroke-width="0.7"/>
+        <line x1="550" y1="90" x2="550" y2="30" stroke="#1a1a1a" stroke-width="1.2"/>
+        <line x1="530" y1="42" x2="570" y2="42" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
 
-      <!-- Bridge -->
-      <path d="M 460 248 L 460 155 L 640 155 L 640 248" stroke="#1a1a1a" stroke-width="1.4" stroke-linejoin="round"/>
-      <path d="M 480 155 L 480 115 L 620 115 L 620 155" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
-      <path d="M 510 115 L 510 90 L 590 90 L 590 115" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
-      <rect x="475" y="163" width="150" height="12" rx="2" stroke="#1a1a1a" stroke-width="0.7"/>
-      <line x1="550" y1="90" x2="550" y2="30" stroke="#1a1a1a" stroke-width="1.2"/>
-      <line x1="530" y1="42" x2="570" y2="42" stroke="#1a1a1a" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Funnel -->
+        <path d="M 680 248 L 680 170 L 740 170 L 740 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+        <path d="M 685 170 L 685 155 L 735 155 L 735 170" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
 
-      <!-- Funnel -->
-      <path d="M 680 248 L 680 170 L 740 170 L 740 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
-      <path d="M 685 170 L 685 155 L 735 155 L 735 170" stroke="#1a1a1a" stroke-width="0.9" stroke-linejoin="round"/>
+        <!-- Aft structure -->
+        <path d="M 790 248 L 790 190 L 920 190 L 920 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
+        <line x1="855" y1="190" x2="855" y2="120" stroke="#1a1a1a" stroke-width="0.9"/>
+        <line x1="840" y1="132" x2="870" y2="132" stroke="#1a1a1a" stroke-width="0.7"/>
 
-      <!-- Aft structure -->
-      <path d="M 790 248 L 790 190 L 920 190 L 920 248" stroke="#1a1a1a" stroke-width="1.3" stroke-linejoin="round"/>
-      <line x1="855" y1="190" x2="855" y2="120" stroke="#1a1a1a" stroke-width="0.9"/>
-      <line x1="840" y1="132" x2="870" y2="132" stroke="#1a1a1a" stroke-width="0.7"/>
+        <!-- Stern / flight deck -->
+        <path d="M 970 248 L 970 210 L 1060 210 L 1060 248" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
+        <circle cx="1015" cy="238" r="10" stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="3 2"/>
 
-      <!-- Stern / flight deck -->
-      <path d="M 970 248 L 970 210 L 1060 210 L 1060 248" stroke="#1a1a1a" stroke-width="1.1" stroke-linejoin="round"/>
-      <circle cx="1015" cy="238" r="10" stroke="#1a1a1a" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <!-- Waterlines -->
+        <path class="waterline" d="M 30 300 Q 80 293 150 298 L 900 298 Q 1000 293 1100 300 Q 1140 305 1180 300" stroke="#c0c8d0" stroke-width="0.7"/>
+        <path class="waterline" d="M 20 318 Q 80 312 200 315 L 950 315 Q 1050 312 1120 318 Q 1150 322 1180 318" stroke="#d8dde4" stroke-width="0.5" style="animation-delay:0.5s"/>
+      </svg>
 
-      <!-- Waterlines -->
-      <path class="waterline" d="M 30 300 Q 80 293 150 298 L 900 298 Q 1000 293 1100 300 Q 1140 305 1180 300" stroke="#c0c8d0" stroke-width="0.7"/>
-      <path class="waterline" d="M 20 318 Q 80 312 200 315 L 950 315 Q 1050 312 1120 318 Q 1150 322 1180 318" stroke="#d8dde4" stroke-width="0.5" style="animation-delay:0.5s"/>
-    </svg>
-
-    <!-- Tooltip form -->
-    <div class="tooltip" id="tooltip">
-      <div class="tooltip-arrow"></div>
-      <div class="colour-row" id="colours"></div>
-      <input type="text" id="note-input" placeholder="Add a note..." maxlength="80" />
-      <div class="tooltip-actions">
-        <button onclick="closeTooltip()">Cancel</button>
-        <button class="primary" onclick="savePin()">Save</button>
+      <!-- Tooltip form -->
+      <div class="tooltip" id="tooltip">
+        <div class="tooltip-arrow"></div>
+        <div class="colour-row" id="colours"></div>
+        <input type="text" id="note-input" placeholder="Add a note..." maxlength="80" />
+        <div class="tooltip-actions">
+          <button onclick="closeTooltip()">Cancel</button>
+          <button class="primary" onclick="savePin()">Save</button>
+        </div>
       </div>
     </div>
   </div>
 
-  <div class="hint">Tap on the ship to add a note</div>
+  <div class="hint" id="hint">Tap on the ship to add a note</div>
 
   <script>
     const COLOURS = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#64748b'];
+    const isMobile = window.matchMedia('(max-width: 600px)').matches;
 
+    const viewport = document.getElementById('viewport');
     const vessel = document.getElementById('vessel');
     const tooltip = document.getElementById('tooltip');
     const noteInput = document.getElementById('note-input');
     const coloursRow = document.getElementById('colours');
+    const hint = document.getElementById('hint');
+
+    if (isMobile) hint.textContent = 'Swipe to browse \u2022 Tap to add a note';
 
     let selectedColour = COLOURS[0];
     let pendingX = 0;
@@ -283,9 +324,31 @@
     // Restore saved pins
     pins.forEach(p => placePin(p.x, p.y, p.colour, p.note, false));
 
-    // Tap on vessel to start placing a pin
+    // --- Distinguish tap from drag on mobile ---
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let touchMoved = false;
+
+    vessel.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      touchMoved = false;
+    }, { passive: true });
+
+    vessel.addEventListener('touchmove', () => {
+      touchMoved = true;
+    }, { passive: true });
+
+    vessel.addEventListener('touchend', (e) => {
+      // If finger moved more than ~10px, it was a scroll not a tap
+      if (touchMoved) return;
+      // Let the click handler deal with it
+    }, { passive: true });
+
+    // Tap / click to place pin
     vessel.addEventListener('click', (e) => {
       if (e.target.closest('.tooltip') || e.target.closest('.pin')) return;
+      if (isMobile && touchMoved) return;
 
       const rect = vessel.getBoundingClientRect();
       const x = ((e.clientX - rect.left) / rect.width) * 100;
@@ -294,12 +357,23 @@
       pendingX = x;
       pendingY = y;
 
-      // Position tooltip above click point
-      tooltip.style.left = `calc(${x}% - 110px)`;
-      tooltip.style.top = `calc(${y}% - 140px)`;
+      // Position tooltip — on mobile, show it in a fixed-ish spot
+      if (isMobile) {
+        const scrollLeft = viewport.scrollLeft;
+        const vpWidth = viewport.clientWidth;
+        // Centre tooltip in the visible area
+        const visibleCentreX = ((scrollLeft + vpWidth / 2 - rect.left) / rect.width) * 100;
+        tooltip.style.left = `calc(${visibleCentreX}% - 110px)`;
+        tooltip.style.top = `calc(${y}% - 140px)`;
+      } else {
+        tooltip.style.left = `calc(${x}% - 110px)`;
+        tooltip.style.top = `calc(${y}% - 140px)`;
+      }
+
       tooltip.classList.add('open');
       noteInput.value = '';
-      noteInput.focus();
+      // Small delay so the keyboard doesn't interfere with scroll on mobile
+      setTimeout(() => noteInput.focus(), 100);
     });
 
     noteInput.addEventListener('keydown', (e) => {
@@ -336,15 +410,33 @@
       label.textContent = note;
       el.appendChild(label);
 
+      // Tap pin on mobile to show note
+      el.addEventListener('click', (e) => {
+        e.stopPropagation();
+        // Toggle active on mobile
+        if (isMobile) {
+          const wasActive = el.classList.contains('active');
+          document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
+          if (!wasActive) el.classList.add('active');
+        }
+      });
+
       // Long press / right click to delete
       el.addEventListener('contextmenu', (e) => {
         e.preventDefault();
-        el.remove();
-        pins = pins.filter(p => !(p.x === x && p.y === y && p.note === note));
-        localStorage.setItem('woody_pins', JSON.stringify(pins));
+        if (confirm('Delete this note?')) {
+          el.remove();
+          pins = pins.filter(p => !(p.x === x && p.y === y && p.note === note));
+          localStorage.setItem('woody_pins', JSON.stringify(pins));
+        }
       });
 
       vessel.appendChild(el);
+    }
+
+    // Scroll to middle on mobile so ship is centred-ish
+    if (isMobile) {
+      viewport.scrollLeft = (vessel.scrollWidth - viewport.clientWidth) / 2;
     }
   </script>
 </body>

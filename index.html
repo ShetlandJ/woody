@@ -2,246 +2,345 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-  <title>Woody Boat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Woody Boat — C&P Audit</title>
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@300;400;500&display=swap');
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
       background: #1a1a1a;
-      height: 100vh;
-      height: 100dvh;
+      color: #e0e0e0;
       font-family: 'DM Mono', monospace;
-      overflow: hidden;
+      min-height: 100vh;
+      overflow-x: hidden;
     }
 
-    /* Desktop: centred as before */
-    .viewport {
-      width: 100%;
-      height: 100%;
+    header {
       display: flex;
       align-items: center;
-      justify-content: center;
-      overflow: hidden;
+      justify-content: space-between;
+      padding: 16px 24px;
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+      gap: 10px;
     }
 
-    .vessel-container {
-      position: relative;
-      cursor: crosshair;
+    .header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
     }
 
-    /* Desktop sizing */
-    @media (min-width: 769px) {
-      .vessel-container {
-        width: 92vw;
-        max-width: 1400px;
-      }
+    header h1 {
+      font-size: 16px;
+      font-weight: 400;
+      color: #aaa;
     }
 
-    /* Mobile: fixed large width, scrollable */
-    @media (max-width: 768px) {
-      .viewport {
-        overflow-x: auto;
-        overflow-y: hidden;
-        -webkit-overflow-scrolling: touch;
-        align-items: center;
-        justify-content: flex-start;
-      }
-
-      .vessel-container {
-        width: 1100px;
-        min-width: 1100px;
-        padding: 0 20px;
-      }
+    .boat-select {
+      background: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 6px 10px;
+      font-family: inherit;
+      font-size: 13px;
+      outline: none;
+      cursor: pointer;
     }
 
-    .vessel-container svg {
+    .boat-select:focus { border-color: #666; }
+    .boat-select option { background: #2a2a2a; }
+
+    .header-controls {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      background: #2a2a2a;
+      color: #e0e0e0;
+      border: 1px solid #444;
+      border-radius: 5px;
+      padding: 7px 14px;
+      font-family: inherit;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { background: #333; }
+
+    .btn-primary {
+      background: #2d6a4f;
+      border-color: #2d6a4f;
+      color: #fff;
+    }
+
+    .btn-primary:hover { background: #3a8464; }
+
+    .btn-danger {
+      color: #ef4444;
+      border-color: #442020;
+    }
+
+    .btn-danger:hover { background: #2a2020; }
+
+    /* Ship diagram */
+    .ship-section {
+      padding: 20px 24px 10px;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .ship-wrap {
+      min-width: 900px;
+      max-width: 1300px;
+      margin: 0 auto;
+    }
+
+    .ship-wrap svg {
       width: 100%;
       height: auto;
       display: block;
     }
 
-    /* Pins */
-    .pin {
-      position: absolute;
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      border: 2px solid #1a1a1a;
-      box-shadow: 0 1px 6px rgba(0,0,0,0.25);
-      transform: translate(-50%, -50%) scale(0);
-      animation: pinDrop 0.3s ease-out forwards;
+    /* Compartment blocks */
+    .comp-block {
       cursor: pointer;
-      z-index: 10;
+      transition: opacity 0.15s;
     }
 
-    @media (max-width: 768px) {
-      .pin { width: 28px; height: 28px; }
-    }
+    .comp-block:hover { opacity: 0.85; }
 
-    @keyframes pinDrop {
-      0% { transform: translate(-50%, -50%) scale(0); }
-      70% { transform: translate(-50%, -50%) scale(1.2); }
-      100% { transform: translate(-50%, -50%) scale(1); }
-    }
-
-    .pin-note {
-      position: absolute;
-      bottom: calc(100% + 6px);
-      left: 50%;
-      transform: translateX(-50%);
-      background: #2a2a2a;
-      border: 1px solid #444;
-      border-radius: 4px;
-      padding: 4px 8px;
-      font-size: 11px;
-      color: #e0e0e0;
-      white-space: nowrap;
-      max-width: 200px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+    .comp-label {
+      font-family: 'DM Mono', monospace;
       pointer-events: none;
+      user-select: none;
+    }
+
+    .rag-dot {
+      transition: fill 0.3s, r 0.3s;
+    }
+
+    .ship-hint {
+      text-align: center;
+      font-size: 11px;
+      color: #555;
+      padding: 2px 0 0;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 18px;
+      justify-content: center;
+      padding: 6px 0 4px;
+      font-size: 11px;
+      color: #888;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Rename modal */
+    .modal-overlay {
       display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 200;
+      align-items: center;
+      justify-content: center;
     }
 
-    .pin:hover .pin-note,
-    .pin.active .pin-note {
-      display: block;
-    }
+    .modal-overlay.open { display: flex; }
 
-    /* Tooltip form */
-    .tooltip {
-      position: absolute;
-      z-index: 100;
+    .modal {
       background: #2a2a2a;
       border: 1px solid #444;
       border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      padding: 14px;
-      width: 220px;
-      display: none;
+      padding: 20px;
+      width: 280px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.5);
     }
 
-    .tooltip.open { display: block; }
-
-    .tooltip-arrow {
-      position: absolute;
-      top: -6px;
-      left: 50%;
-      transform: translateX(-50%);
-      width: 12px;
-      height: 6px;
-      overflow: hidden;
+    .modal h3 {
+      font-size: 13px;
+      font-weight: 400;
+      color: #888;
+      margin-bottom: 12px;
     }
 
-    .tooltip-arrow::after {
-      content: '';
-      position: absolute;
-      top: 3px;
-      left: 50%;
-      transform: translateX(-50%) rotate(45deg);
-      width: 8px;
-      height: 8px;
-      background: #2a2a2a;
-      border: 1px solid #444;
-    }
-
-    .colour-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
-    }
-
-    .colour-swatch {
-      width: 26px;
-      height: 26px;
-      border-radius: 50%;
-      border: 2px solid transparent;
-      cursor: pointer;
-      transition: border-color 0.15s, transform 0.15s;
-    }
-
-    .colour-swatch:hover { transform: scale(1.15); }
-    .colour-swatch.selected { border-color: #fff; }
-
-    .tooltip input[type="text"] {
+    .modal input {
       width: 100%;
+      background: #333;
       border: 1px solid #555;
       border-radius: 5px;
-      padding: 7px 10px;
+      padding: 8px 10px;
       font-family: inherit;
       font-size: 14px;
+      color: #e0e0e0;
       outline: none;
-      margin-bottom: 10px;
-      background: #333;
-      color: #e0e0e0;
+      margin-bottom: 14px;
     }
 
-    .tooltip input[type="text"]:focus {
-      border-color: #888;
-    }
+    .modal input:focus { border-color: #888; }
 
-    .tooltip-actions {
+    .modal-actions {
       display: flex;
-      gap: 6px;
+      gap: 8px;
     }
 
-    .tooltip-actions button {
-      flex: 1;
-      padding: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #555;
-      background: #333;
-      color: #e0e0e0;
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
+    .modal-actions button { flex: 1; }
+
+    /* Findings table */
+    .findings-section {
+      padding: 10px 24px 40px;
     }
 
-    .tooltip-actions button.primary {
-      background: #e0e0e0;
-      color: #1a1a1a;
-      border-color: #e0e0e0;
+    .findings-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
     }
 
-    .tooltip-actions button:hover { opacity: 0.85; }
-
-    /* Export button */
-    .export-btn {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      background: #2a2a2a;
-      color: #e0e0e0;
-      border: 1px solid #444;
-      border-radius: 6px;
-      padding: 8px 14px;
-      font-family: inherit;
-      font-size: 12px;
-      cursor: pointer;
-      z-index: 50;
-      display: none;
-    }
-
-    .export-btn:hover { background: #333; }
-    .export-btn.visible { display: block; }
-
-    /* Hint */
-    .hint {
-      position: fixed;
-      bottom: 20px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 12px;
+    .findings-header h2 {
+      font-size: 14px;
+      font-weight: 400;
       color: #888;
-      pointer-events: none;
-      white-space: nowrap;
     }
 
-    /* Waterline */
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid #333;
+      border-radius: 6px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      min-width: 820px;
+      font-size: 13px;
+    }
+
+    thead th {
+      background: #252525;
+      padding: 10px 10px;
+      text-align: left;
+      font-weight: 400;
+      color: #999;
+      border-bottom: 1px solid #333;
+      white-space: nowrap;
+      position: sticky;
+      top: 0;
+    }
+
+    tbody td {
+      padding: 2px 4px;
+      border-bottom: 1px solid #2a2a2a;
+      vertical-align: middle;
+    }
+
+    tbody tr:hover { background: #222; }
+
+    /* Inline inputs */
+    .cell-input {
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      padding: 6px 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: #e0e0e0;
+      outline: none;
+    }
+
+    .cell-input:focus {
+      border-color: #555;
+      background: #2a2a2a;
+    }
+
+    .cell-input::placeholder { color: #555; }
+
+    /* RAG select */
+    .rag-select {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      padding: 6px 6px;
+      font-family: inherit;
+      font-size: 13px;
+      color: #e0e0e0;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .rag-select:focus {
+      border-color: #555;
+      background: #2a2a2a;
+    }
+
+    .rag-select option { background: #2a2a2a; }
+
+    /* RAG cell colour strip */
+    td.rag-cell {
+      position: relative;
+      min-width: 80px;
+    }
+
+    td.rag-cell::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 4px;
+      bottom: 4px;
+      width: 4px;
+      border-radius: 2px;
+    }
+
+    td.rag-cell.rag-red::before    { background: #ef4444; }
+    td.rag-cell.rag-amber::before  { background: #f59e0b; }
+    td.rag-cell.rag-green::before  { background: #22c55e; }
+
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #555;
+      font-size: 16px;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 3px;
+      line-height: 1;
+    }
+
+    .delete-btn:hover { color: #ef4444; background: #2a2020; }
+
+    .add-row-btn {
+      margin-top: 10px;
+    }
+
+    /* Waterline animation */
     .waterline {
       stroke-dasharray: 12 6;
       animation: waterflow 2s linear infinite;
@@ -250,295 +349,624 @@
     @keyframes waterflow {
       to { stroke-dashoffset: -18; }
     }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%) translateY(60px);
+      background: #2d6a4f;
+      color: #fff;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 12px;
+      opacity: 0;
+      transition: all 0.3s ease;
+      pointer-events: none;
+      z-index: 100;
+    }
+
+    .toast.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+    }
+
+    @media (max-width: 768px) {
+      header { padding: 12px 16px; }
+      header h1 { font-size: 14px; }
+      .ship-section { padding: 12px 16px; }
+      .findings-section { padding: 10px 16px 40px; }
+    }
   </style>
 </head>
 <body>
-  <div class="viewport" id="viewport">
-    <div class="vessel-container" id="vessel">
-      <svg viewBox="0 0 1200 400" xmlns="http://www.w3.org/2000/svg" fill="none">
-        <!-- Hull -->
-        <path d="M 80 250 L 200 250 L 200 220 L 980 220 L 980 250 L 1100 250" stroke="#d0d0d0" stroke-width="1.8" stroke-linejoin="round"/>
-        <path d="M 80 250 Q 80 300 130 325 L 300 355 Q 400 362 600 365 Q 800 362 950 350 L 1060 325 Q 1100 300 1100 250" stroke="#d0d0d0" stroke-width="2"/>
-        <line x1="95" y1="248" x2="1095" y2="248" stroke="#d0d0d0" stroke-width="0.6"/>
+  <header>
+    <div class="header-left">
+      <h1>C&P Audit</h1>
+      <select class="boat-select" id="boat-select" onchange="switchBoat(this.value)"></select>
+      <button class="btn" onclick="newBoat()">New Boat</button>
+      <button class="btn" onclick="renameBoat()">Rename</button>
+      <button class="btn btn-danger" onclick="deleteBoat()">Delete</button>
+    </div>
+    <div class="header-controls">
+      <button class="btn" onclick="exportCSV()">Export CSV</button>
+    </div>
+  </header>
 
-        <!-- Bow -->
-        <path d="M 80 250 L 80 175 L 100 170 L 200 170 L 200 220" stroke="#d0d0d0" stroke-width="1.4" stroke-linejoin="round"/>
-        <line x1="140" y1="170" x2="140" y2="80" stroke="#d0d0d0" stroke-width="1"/>
-        <line x1="125" y1="95" x2="155" y2="95" stroke="#d0d0d0" stroke-width="0.7"/>
+  <div class="ship-section">
+    <div class="ship-wrap">
+      <svg id="ship-svg" viewBox="0 0 1340 460" xmlns="http://www.w3.org/2000/svg">
+        <!-- Hull outline -->
+        <path d="M 55 315 L 55 345 Q 55 415, 200 425 L 1100 415 Q 1280 405, 1310 340 L 1310 315" stroke="#555" stroke-width="1.5" fill="none" stroke-linejoin="round"/>
+        <!-- Deck line -->
+        <line x1="55" y1="315" x2="1310" y2="315" stroke="#555" stroke-width="1"/>
+        <!-- Stern wall -->
+        <line x1="55" y1="315" x2="55" y2="195" stroke="#555" stroke-width="1.2"/>
+        <!-- Stern upper -->
+        <path d="M 55 195 L 75 190 L 340 190" stroke="#555" stroke-width="1" fill="none"/>
 
-        <!-- Forward structure -->
-        <path d="M 260 248 L 260 185 L 400 185 L 400 248" stroke="#d0d0d0" stroke-width="1.3" stroke-linejoin="round"/>
-        <line x1="270" y1="210" x2="390" y2="210" stroke="#d0d0d0" stroke-width="0.5"/>
-        <line x1="270" y1="230" x2="390" y2="230" stroke="#d0d0d0" stroke-width="0.5"/>
-
-        <!-- Bridge -->
-        <path d="M 460 248 L 460 155 L 640 155 L 640 248" stroke="#d0d0d0" stroke-width="1.4" stroke-linejoin="round"/>
-        <path d="M 480 155 L 480 115 L 620 115 L 620 155" stroke="#d0d0d0" stroke-width="1.1" stroke-linejoin="round"/>
-        <path d="M 510 115 L 510 90 L 590 90 L 590 115" stroke="#d0d0d0" stroke-width="0.9" stroke-linejoin="round"/>
-        <rect x="475" y="163" width="150" height="12" rx="2" stroke="#d0d0d0" stroke-width="0.7"/>
-        <line x1="550" y1="90" x2="550" y2="30" stroke="#d0d0d0" stroke-width="1.2"/>
-        <line x1="530" y1="42" x2="570" y2="42" stroke="#d0d0d0" stroke-width="1.5" stroke-linecap="round"/>
+        <!-- Left superstructure (G section) -->
+        <path d="M 340 315 L 340 118 L 510 118 L 510 315" stroke="#555" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M 360 118 L 360 95 L 490 95 L 490 118" stroke="#555" stroke-width="0.8" fill="none" stroke-linejoin="round"/>
 
         <!-- Funnel -->
-        <path d="M 680 248 L 680 170 L 740 170 L 740 248" stroke="#d0d0d0" stroke-width="1.3" stroke-linejoin="round"/>
-        <path d="M 685 170 L 685 155 L 735 155 L 735 170" stroke="#d0d0d0" stroke-width="0.9" stroke-linejoin="round"/>
+        <rect x="535" y="145" width="40" height="75" rx="2" stroke="#555" stroke-width="0.9" fill="none"/>
+        <rect x="540" y="130" width="30" height="15" rx="1" stroke="#555" stroke-width="0.6" fill="none"/>
+        <!-- Mast -->
+        <line x1="555" y1="130" x2="555" y2="70" stroke="#555" stroke-width="1"/>
+        <line x1="540" y1="82" x2="570" y2="82" stroke="#555" stroke-width="0.8"/>
 
-        <!-- Aft structure -->
-        <path d="M 790 248 L 790 190 L 920 190 L 920 248" stroke="#d0d0d0" stroke-width="1.3" stroke-linejoin="round"/>
-        <line x1="855" y1="190" x2="855" y2="120" stroke="#d0d0d0" stroke-width="0.9"/>
-        <line x1="840" y1="132" x2="870" y2="132" stroke="#d0d0d0" stroke-width="0.7"/>
+        <!-- Right superstructure (E/bridge area) -->
+        <path d="M 720 315 L 720 155 L 1020 155 L 1020 315" stroke="#555" stroke-width="1.2" fill="none" stroke-linejoin="round"/>
+        <path d="M 750 155 L 750 130 L 990 130 L 990 155" stroke="#555" stroke-width="0.8" fill="none" stroke-linejoin="round"/>
 
-        <!-- Stern / flight deck -->
-        <path d="M 970 248 L 970 210 L 1060 210 L 1060 248" stroke="#d0d0d0" stroke-width="1.1" stroke-linejoin="round"/>
-        <circle cx="1015" cy="238" r="10" stroke="#d0d0d0" stroke-width="0.5" stroke-dasharray="3 2"/>
+        <!-- Forward deck -->
+        <path d="M 1020 315 L 1020 190 L 1310 190 L 1310 315" stroke="#555" stroke-width="1" fill="none" stroke-linejoin="round"/>
 
-        <!-- Zone labels -->
-        <g class="zone-labels" fill="none">
-          <circle cx="140" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="140" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">1</text>
-
-          <circle cx="330" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="330" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">2</text>
-
-          <circle cx="550" cy="185" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="550" y="189" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">3</text>
-
-          <circle cx="710" cy="200" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="710" y="204" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">4</text>
-
-          <circle cx="855" cy="220" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="855" y="224" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">5</text>
-
-          <circle cx="1015" cy="228" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="1015" y="232" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">6</text>
-
-          <circle cx="590" cy="310" r="12" stroke="#555" stroke-width="0.8"/>
-          <text x="590" y="314" text-anchor="middle" fill="#555" font-family="DM Mono, monospace" font-size="12" font-weight="400">7</text>
-        </g>
+        <!-- Bow taper -->
+        <path d="M 1310 195 L 1310 315" stroke="#555" stroke-width="1" fill="none"/>
 
         <!-- Waterlines -->
-        <path class="waterline" d="M 30 300 Q 80 293 150 298 L 900 298 Q 1000 293 1100 300 Q 1140 305 1180 300" stroke="#3a4550" stroke-width="0.7"/>
-        <path class="waterline" d="M 20 318 Q 80 312 200 315 L 950 315 Q 1050 312 1120 318 Q 1150 322 1180 318" stroke="#2e363d" stroke-width="0.5" style="animation-delay:0.5s"/>
-      </svg>
+        <path class="waterline" d="M 10 370 Q 80 363 200 368 L 1100 365 Q 1200 360 1330 370" stroke="#3a4550" stroke-width="0.7" fill="none"/>
+        <path class="waterline" d="M 5 390 Q 100 383 250 387 L 1050 385 Q 1200 380 1340 390" stroke="#2e363d" stroke-width="0.5" fill="none" style="animation-delay:0.5s"/>
 
-      <!-- Tooltip form -->
-      <div class="tooltip" id="tooltip">
-        <div class="tooltip-arrow"></div>
-        <div class="colour-row" id="colours"></div>
-        <input type="text" id="note-input" placeholder="Add a note..." maxlength="80" />
-        <div class="tooltip-actions">
-          <button onclick="closeTooltip()">Cancel</button>
-          <button class="primary" onclick="savePin()">Save</button>
-        </div>
+        <!-- Compartment blocks (rendered by JS) -->
+        <g id="compartments"></g>
+      </svg>
+    </div>
+    <div class="legend">
+      <div class="legend-item"><span class="legend-dot" style="background:#22c55e"></span> Green — No findings</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#f59e0b"></span> Amber</div>
+      <div class="legend-item"><span class="legend-dot" style="background:#ef4444"></span> Red</div>
+    </div>
+    <div class="ship-hint">Click a compartment to rename it</div>
+  </div>
+
+  <div class="findings-section">
+    <div class="findings-header">
+      <h2>Audit Findings</h2>
+      <button class="btn btn-primary add-row-btn" onclick="addRow()">+ Add Finding</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>RAG</th>
+            <th>Photo</th>
+            <th>Company</th>
+            <th>Compartment</th>
+            <th>Unit</th>
+            <th>High Level Theme</th>
+            <th>Theme</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="findings-body"></tbody>
+      </table>
+    </div>
+    <button class="btn btn-primary add-row-btn" onclick="addRow()" style="margin-top:10px">+ Add Finding</button>
+  </div>
+
+  <!-- Rename compartment modal -->
+  <div class="modal-overlay" id="rename-modal">
+    <div class="modal">
+      <h3>Labels for <span id="rename-comp-id"></span></h3>
+      <input type="text" id="rename-input" placeholder="e.g. D22, UD22, 196" />
+      <p style="font-size:10px;color:#666;margin:-10px 0 12px">Comma-separated aliases. First one shows on the block.</p>
+      <div class="modal-actions">
+        <button class="btn" onclick="closeRenameModal()">Cancel</button>
+        <button class="btn btn-primary" onclick="confirmRename()">Save</button>
       </div>
     </div>
   </div>
 
-  <button class="export-btn" id="export-btn" onclick="exportCSV()">Export CSV</button>
-  <div class="hint" id="hint">Tap on the ship to add a note</div>
+  <div class="toast" id="toast"></div>
 
   <script>
-    const COLOURS = ['#ef4444','#f97316','#eab308','#22c55e','#3b82f6','#8b5cf6','#ec4899','#64748b'];
-    const isMobile = window.matchMedia('(max-width: 768px)').matches;
+    // ── Default compartment layout ──
+    const BW = 60, BH = 28;
 
-    const viewport = document.getElementById('viewport');
-    const vessel = document.getElementById('vessel');
-    const tooltip = document.getElementById('tooltip');
-    const noteInput = document.getElementById('note-input');
-    const coloursRow = document.getElementById('colours');
-    const hint = document.getElementById('hint');
+    const DEFAULT_COMPARTMENTS = [
+      // D section — stern hull
+      { id: 'D42', x: 70,  y: 210 },
+      { id: 'D32', x: 133, y: 210 },
+      { id: 'D23', x: 196, y: 210 },
+      { id: 'D12', x: 259, y: 210 },
+      { id: 'D41', x: 70,  y: 241 },
+      { id: 'D31', x: 133, y: 241 },
+      { id: 'D22', x: 196, y: 241 },
+      { id: 'D21', x: 133, y: 272 },
+      { id: 'D11', x: 196, y: 272 },
 
-    if (isMobile) hint.textContent = 'Swipe to browse \u2022 Tap to add a note';
+      // G section — aft superstructure
+      { id: 'G42S', x: 350, y: 125 },
+      { id: 'G41P', x: 440, y: 125 },
+      { id: 'G31S', x: 350, y: 156 },
+      { id: 'G32P', x: 440, y: 156 },
+      { id: 'G22',  x: 350, y: 187 },
+      { id: 'G21',  x: 440, y: 187 },
+      { id: 'G11',  x: 350, y: 218 },
 
-    // Zone definitions — x% boundaries (above deck), zone 7 = hull (below deck)
-    const ZONES = [
-      { id: 1, name: 'Bow',               maxX: 19 },
-      { id: 2, name: 'Forward structure',  maxX: 36 },
-      { id: 3, name: 'Bridge',             maxX: 55 },
-      { id: 4, name: 'Funnel',             maxX: 64 },
-      { id: 5, name: 'Aft structure',      maxX: 80 },
-      { id: 6, name: 'Stern',              maxX: 100 },
+      // F section — between superstructures
+      { id: 'F12', x: 610, y: 195 },
+      { id: 'F11', x: 610, y: 226 },
+
+      // H section — funnel area
+      { id: 'H11', x: 660, y: 195 },
+
+      // C section — center hull
+      { id: 'C32', x: 540, y: 253 },
+      { id: 'C22', x: 603, y: 253 },
+      { id: 'C12', x: 666, y: 253 },
+      { id: 'C31', x: 540, y: 284 },
+      { id: 'C21', x: 603, y: 284 },
+      { id: 'C11', x: 666, y: 284 },
+
+      // E section — forward superstructure
+      { id: 'E32', x: 730, y: 170 },
+      { id: 'E22', x: 793, y: 170 },
+      { id: 'E12', x: 856, y: 170 },
+      { id: 'E31', x: 730, y: 201 },
+      { id: 'E21', x: 793, y: 201 },
+      { id: 'E11', x: 856, y: 201 },
+
+      // B section — forward hull (4 rows x 3 cols)
+      { id: 'B34', x: 940,  y: 170 },
+      { id: 'B24', x: 1003, y: 170 },
+      { id: 'B14', x: 1066, y: 170 },
+      { id: 'B33', x: 940,  y: 201 },
+      { id: 'B23', x: 1003, y: 201 },
+      { id: 'B13', x: 1066, y: 201 },
+      { id: 'B32', x: 940,  y: 232 },
+      { id: 'B22', x: 1003, y: 232 },
+      { id: 'B12', x: 1066, y: 232 },
+      { id: 'B31', x: 940,  y: 263 },
+      { id: 'B21', x: 1003, y: 263 },
+      { id: 'B11', x: 1066, y: 263 },
+
+      // A section — bow (vertical stack)
+      { id: 'A25', x: 1200, y: 201 },
+      { id: 'A24', x: 1200, y: 232 },
+      { id: 'A23', x: 1200, y: 263 },
+      { id: 'A22', x: 1200, y: 294 },
+      { id: 'A21', x: 1263, y: 294 },
     ];
-    const DECK_LINE_Y = 62; // y% where hull begins
 
-    function getZone(x, y) {
-      if (y >= DECK_LINE_Y) return { id: 7, name: 'Hull' };
-      for (const z of ZONES) {
-        if (x <= z.maxX) return z;
+    // ── Boat data model ──
+    // Each boat: { id, name, labels: { compId: displayLabel }, findings: [] }
+    const STORAGE_KEY = 'woody_boats';
+    const ACTIVE_KEY = 'woody_active_boat';
+
+    function loadBoats() {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) return JSON.parse(raw);
+      // Migrate from old format if present
+      const oldFindings = localStorage.getItem('woody_findings');
+      const defaultBoat = createBoatData('Ship 3');
+      if (oldFindings) {
+        defaultBoat.findings = JSON.parse(oldFindings);
+        localStorage.removeItem('woody_findings');
       }
-      return { id: 6, name: 'Stern' };
+      return [defaultBoat];
     }
 
-    let selectedColour = COLOURS[0];
-    let pendingX = 0;
-    let pendingY = 0;
-    let pins = JSON.parse(localStorage.getItem('woody_pins') || '[]');
+    function createBoatData(name) {
+      const labels = {};
+      DEFAULT_COMPARTMENTS.forEach(c => { labels[c.id] = [c.id]; });
+      return {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+        name,
+        labels,
+        findings: []
+      };
+    }
 
-    // Build colour swatches
-    COLOURS.forEach((c, i) => {
-      const swatch = document.createElement('div');
-      swatch.className = 'colour-swatch' + (i === 0 ? ' selected' : '');
-      swatch.style.background = c;
-      swatch.addEventListener('click', (e) => {
-        e.stopPropagation();
-        document.querySelectorAll('.colour-swatch').forEach(s => s.classList.remove('selected'));
-        swatch.classList.add('selected');
-        selectedColour = c;
+    // Normalize labels: ensure they're always arrays (migrate old string format)
+    function getLabels(boat, compId) {
+      const val = boat.labels[compId];
+      if (!val) return [compId];
+      if (Array.isArray(val)) return val;
+      // Migrate old string format
+      return [val];
+    }
+
+    let boats = loadBoats();
+    let activeBoatId = localStorage.getItem(ACTIVE_KEY) || boats[0].id;
+
+    // Ensure active boat exists
+    if (!boats.find(b => b.id === activeBoatId)) activeBoatId = boats[0].id;
+
+    function getActiveBoat() {
+      return boats.find(b => b.id === activeBoatId);
+    }
+
+    function saveAll() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(boats));
+      localStorage.setItem(ACTIVE_KEY, activeBoatId);
+    }
+
+    // ── Boat selector ──
+    const boatSelect = document.getElementById('boat-select');
+
+    function renderBoatSelect() {
+      boatSelect.innerHTML = '';
+      boats.forEach(b => {
+        const opt = document.createElement('option');
+        opt.value = b.id;
+        opt.textContent = b.name;
+        if (b.id === activeBoatId) opt.selected = true;
+        boatSelect.appendChild(opt);
       });
-      coloursRow.appendChild(swatch);
-    });
+    }
 
-    // Restore saved pins (migrate old pins without zone)
-    pins.forEach(p => {
-      if (!p.zone) {
-        const z = getZone(p.x, p.y);
-        p.zone = z.id;
-        p.zoneName = z.name;
+    function switchBoat(id) {
+      activeBoatId = id;
+      saveAll();
+      renderAll();
+    }
+
+    function newBoat() {
+      const name = prompt('Boat name:');
+      if (!name || !name.trim()) return;
+      const boat = createBoatData(name.trim());
+      boats.push(boat);
+      activeBoatId = boat.id;
+      saveAll();
+      renderAll();
+      showToast('Created ' + boat.name);
+    }
+
+    function renameBoat() {
+      const boat = getActiveBoat();
+      const name = prompt('Rename boat:', boat.name);
+      if (!name || !name.trim()) return;
+      boat.name = name.trim();
+      saveAll();
+      renderBoatSelect();
+      showToast('Renamed to ' + boat.name);
+    }
+
+    function deleteBoat() {
+      if (boats.length <= 1) {
+        showToast('Cannot delete the only boat');
+        return;
       }
-      placePin(p, false);
-    });
+      const boat = getActiveBoat();
+      if (!confirm('Delete "' + boat.name + '" and all its findings?')) return;
+      boats = boats.filter(b => b.id !== activeBoatId);
+      activeBoatId = boats[0].id;
+      saveAll();
+      renderAll();
+      showToast('Deleted');
+    }
 
-    // --- Distinguish tap from drag on mobile ---
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let touchMoved = false;
+    // ── Compartment rendering ──
+    const compGroup = document.getElementById('compartments');
+    const ns = 'http://www.w3.org/2000/svg';
 
-    vessel.addEventListener('touchstart', (e) => {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      touchMoved = false;
-    }, { passive: true });
+    function renderCompartments() {
+      compGroup.innerHTML = '';
+      const boat = getActiveBoat();
+      const ragMap = computeRAGMap(boat);
 
-    vessel.addEventListener('touchmove', () => {
-      touchMoved = true;
-    }, { passive: true });
+      DEFAULT_COMPARTMENTS.forEach(comp => {
+        const aliases = getLabels(boat, comp.id);
+        const label = aliases[0];
+        const g = document.createElementNS(ns, 'g');
+        g.setAttribute('class', 'comp-block');
+        g.setAttribute('data-id', comp.id);
 
-    vessel.addEventListener('touchend', (e) => {
-      // If finger moved more than ~10px, it was a scroll not a tap
-      if (touchMoved) return;
-      // Let the click handler deal with it
-    }, { passive: true });
+        // Block rect
+        const rect = document.createElementNS(ns, 'rect');
+        rect.setAttribute('x', comp.x);
+        rect.setAttribute('y', comp.y);
+        rect.setAttribute('width', BW);
+        rect.setAttribute('height', BH);
+        rect.setAttribute('rx', '2');
+        rect.setAttribute('fill', '#1a4a3a');
+        rect.setAttribute('stroke', '#2d6a4f');
+        rect.setAttribute('stroke-width', '0.8');
+        g.appendChild(rect);
 
-    // Tap / click to place pin
-    vessel.addEventListener('click', (e) => {
-      if (e.target.closest('.tooltip') || e.target.closest('.pin')) return;
-      if (isMobile && touchMoved) return;
+        // Label text
+        const text = document.createElementNS(ns, 'text');
+        text.setAttribute('x', comp.x + BW / 2);
+        text.setAttribute('y', comp.y + BH / 2 + 4);
+        text.setAttribute('text-anchor', 'middle');
+        text.setAttribute('fill', '#a0c4b0');
+        text.setAttribute('font-size', label.length > 4 ? '7.5' : '9');
+        text.setAttribute('font-family', 'DM Mono, monospace');
+        text.setAttribute('class', 'comp-label');
+        text.textContent = label;
+        g.appendChild(text);
 
-      const rect = vessel.getBoundingClientRect();
-      const x = ((e.clientX - rect.left) / rect.width) * 100;
-      const y = ((e.clientY - rect.top) / rect.height) * 100;
+        // RAG dots — one per finding, or a single green if none
+        const rags = ragMap[comp.id] || [];
+        const RAG_COLORS = { 'Red': '#ef4444', 'Amber': '#f59e0b', 'Green': '#22c55e' };
+        const priority = { 'Red': 3, 'Amber': 2, 'Green': 1 };
 
-      pendingX = x;
-      pendingY = y;
+        if (rags.length === 0) {
+          // No findings — single green dot
+          const dot = document.createElementNS(ns, 'circle');
+          dot.setAttribute('cx', comp.x + BW - 8);
+          dot.setAttribute('cy', comp.y + BH / 2);
+          dot.setAttribute('r', '4');
+          dot.setAttribute('fill', '#22c55e');
+          dot.setAttribute('class', 'rag-dot');
+          g.appendChild(dot);
+        } else {
+          // Position dots in a row, spaced evenly
+          const dotR = 4.5;
+          const spacing = Math.min(12, (BW - 16) / rags.length);
+          const startX = comp.x + BW - 8 - (rags.length - 1) * spacing;
+          rags.forEach((rag, di) => {
+            const dot = document.createElementNS(ns, 'circle');
+            dot.setAttribute('cx', startX + di * spacing);
+            dot.setAttribute('cy', comp.y + 9);
+            dot.setAttribute('r', String(dotR));
+            dot.setAttribute('fill', RAG_COLORS[rag] || '#22c55e');
+            dot.setAttribute('class', 'rag-dot');
+            g.appendChild(dot);
+          });
 
-      // Position tooltip — on mobile, show it in a fixed-ish spot
-      if (isMobile) {
-        const scrollLeft = viewport.scrollLeft;
-        const vpWidth = viewport.clientWidth;
-        // Centre tooltip in the visible area
-        const visibleCentreX = ((scrollLeft + vpWidth / 2 - rect.left) / rect.width) * 100;
-        tooltip.style.left = `calc(${visibleCentreX}% - 110px)`;
-        tooltip.style.top = `calc(${y}% - 140px)`;
+          // Border highlight — worst RAG wins
+          const worst = rags.reduce((a, b) => (priority[a] || 0) >= (priority[b] || 0) ? a : b);
+          if (worst === 'Red' || worst === 'Amber') {
+            rect.setAttribute('stroke', RAG_COLORS[worst]);
+            rect.setAttribute('stroke-width', '1.5');
+          }
+        }
+
+        // Click to rename
+        g.addEventListener('click', () => openRenameModal(comp.id, aliases));
+
+        compGroup.appendChild(g);
+      });
+    }
+
+    // Returns { compId: ['Red', 'Green', ...] } — one entry per finding
+    function computeRAGMap(boat) {
+      const ragMap = {};
+
+      // Build reverse label map: every alias -> comp ID
+      const labelToId = {};
+      DEFAULT_COMPARTMENTS.forEach(comp => {
+        labelToId[comp.id.toUpperCase()] = comp.id;
+        const aliases = getLabels(boat, comp.id);
+        aliases.forEach(a => { labelToId[a.toUpperCase()] = comp.id; });
+      });
+
+      boat.findings.forEach(f => {
+        if (!f.unit || !f.rag) return;
+        const units = f.unit.split(/[\/,;]\s*/);
+        units.forEach(raw => {
+          let compId = raw.trim();
+          if (compId.match(/^U[A-Z]/i)) compId = compId.slice(1);
+          const match = resolveCompartment(compId.toUpperCase(), labelToId);
+          if (match) {
+            if (!ragMap[match]) ragMap[match] = [];
+            ragMap[match].push(f.rag);
+          }
+        });
+      });
+      return ragMap;
+    }
+
+    function resolveCompartment(id, labelToId) {
+      if (labelToId[id]) return labelToId[id];
+      // Try stripping parentheses: G42(S) -> G42S
+      const cleaned = id.replace(/[()]/g, '');
+      if (labelToId[cleaned]) return labelToId[cleaned];
+      // Try with S/P suffix
+      if (labelToId[id + 'S']) return labelToId[id + 'S'];
+      if (labelToId[id + 'P']) return labelToId[id + 'P'];
+      return null;
+    }
+
+    // ── Rename modal ──
+    let renamingCompId = null;
+    const renameModal = document.getElementById('rename-modal');
+    const renameInput = document.getElementById('rename-input');
+    const renameCompIdSpan = document.getElementById('rename-comp-id');
+
+    function openRenameModal(compId, aliases) {
+      renamingCompId = compId;
+      renameCompIdSpan.textContent = compId;
+      renameInput.value = aliases.join(', ');
+      renameModal.classList.add('open');
+      setTimeout(() => { renameInput.focus(); renameInput.select(); }, 50);
+    }
+
+    function closeRenameModal() {
+      renameModal.classList.remove('open');
+      renamingCompId = null;
+    }
+
+    function confirmRename() {
+      if (!renamingCompId) return;
+      const boat = getActiveBoat();
+      const raw = renameInput.value.trim();
+      if (raw) {
+        const aliases = raw.split(/,\s*/).map(s => s.trim()).filter(Boolean);
+        boat.labels[renamingCompId] = aliases.length > 0 ? aliases : [renamingCompId];
       } else {
-        tooltip.style.left = `calc(${x}% - 110px)`;
-        tooltip.style.top = `calc(${y}% - 140px)`;
+        boat.labels[renamingCompId] = [renamingCompId];
       }
+      saveAll();
+      renderCompartments();
+      closeRenameModal();
+    }
 
-      tooltip.classList.add('open');
-      noteInput.value = '';
-      // Small delay so the keyboard doesn't interfere with scroll on mobile
-      setTimeout(() => noteInput.focus(), 100);
+    renameInput.addEventListener('keydown', e => {
+      if (e.key === 'Enter') confirmRename();
+      if (e.key === 'Escape') closeRenameModal();
     });
 
-    noteInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') savePin();
-      if (e.key === 'Escape') closeTooltip();
+    renameModal.addEventListener('click', e => {
+      if (e.target === renameModal) closeRenameModal();
     });
 
-    function closeTooltip() {
-      tooltip.classList.remove('open');
+    // ── Table rendering ──
+    const tbody = document.getElementById('findings-body');
+
+    function renderTable() {
+      tbody.innerHTML = '';
+      const boat = getActiveBoat();
+      boat.findings.forEach((f, i) => renderRow(f, i, boat));
     }
 
-    function savePin() {
-      const note = noteInput.value.trim();
-      if (!note) { noteInput.focus(); return; }
+    function renderRow(f, idx, boat) {
+      const tr = document.createElement('tr');
+      tr.dataset.idx = idx;
 
-      const zone = getZone(pendingX, pendingY);
-      const pin = { x: pendingX, y: pendingY, colour: selectedColour, note, zone: zone.id, zoneName: zone.name };
-      pins.push(pin);
-      localStorage.setItem('woody_pins', JSON.stringify(pins));
-      placePin(pin, true);
-      closeTooltip();
-      updateExportBtn();
-    }
+      // RAG
+      const ragTd = document.createElement('td');
+      ragTd.className = 'rag-cell' + (f.rag ? ' rag-' + f.rag.toLowerCase() : '');
+      const ragSel = document.createElement('select');
+      ragSel.className = 'rag-select';
+      ['', 'Red', 'Amber', 'Green'].forEach(v => {
+        const opt = document.createElement('option');
+        opt.value = v;
+        opt.textContent = v || '\u2014';
+        if (v === f.rag) opt.selected = true;
+        ragSel.appendChild(opt);
+      });
+      ragSel.onchange = () => {
+        f.rag = ragSel.value;
+        ragTd.className = 'rag-cell' + (f.rag ? ' rag-' + f.rag.toLowerCase() : '');
+        save();
+      };
+      ragTd.appendChild(ragSel);
+      tr.appendChild(ragTd);
 
-    function placePin(pin, animate) {
-      const { x, y, colour, note, zone, zoneName } = pin;
-      const el = document.createElement('div');
-      el.className = 'pin';
-      el.style.left = x + '%';
-      el.style.top = y + '%';
-      el.style.background = colour;
-      if (!animate) el.style.animation = 'none';
-      if (!animate) el.style.transform = 'translate(-50%, -50%) scale(1)';
+      // Text fields
+      const fields = [
+        { key: 'photo', placeholder: '#' },
+        { key: 'company', placeholder: 'Company' },
+        { key: 'compartment', placeholder: 'Comp.' },
+        { key: 'unit', placeholder: 'e.g. UB14' },
+        { key: 'highLevelTheme', placeholder: 'Theme' },
+        { key: 'theme', placeholder: 'Detail' },
+      ];
 
-      const label = document.createElement('div');
-      label.className = 'pin-note';
-      label.textContent = `[${zone}] ${note}`;
-      el.appendChild(label);
-
-      // Tap pin on mobile to show note
-      el.addEventListener('click', (e) => {
-        e.stopPropagation();
-        if (isMobile) {
-          const wasActive = el.classList.contains('active');
-          document.querySelectorAll('.pin.active').forEach(p => p.classList.remove('active'));
-          if (!wasActive) el.classList.add('active');
-        }
+      fields.forEach(({ key, placeholder }) => {
+        const td = document.createElement('td');
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'cell-input';
+        input.placeholder = placeholder;
+        input.value = f[key] || '';
+        input.oninput = () => {
+          f[key] = input.value;
+          save();
+        };
+        td.appendChild(input);
+        tr.appendChild(td);
       });
 
-      // Long press / right click to delete
-      el.addEventListener('contextmenu', (e) => {
-        e.preventDefault();
-        if (confirm('Delete this note?')) {
-          el.remove();
-          pins = pins.filter(p => !(p.x === x && p.y === y && p.note === note));
-          localStorage.setItem('woody_pins', JSON.stringify(pins));
-          updateExportBtn();
-        }
-      });
+      // Delete
+      const delTd = document.createElement('td');
+      const delBtn = document.createElement('button');
+      delBtn.className = 'delete-btn';
+      delBtn.textContent = '\u00d7';
+      delBtn.title = 'Delete finding';
+      delBtn.onclick = () => {
+        boat.findings.splice(idx, 1);
+        save();
+        renderTable();
+      };
+      delTd.appendChild(delBtn);
+      tr.appendChild(delTd);
 
-      vessel.appendChild(el);
+      tbody.appendChild(tr);
     }
 
-    const exportBtn = document.getElementById('export-btn');
-
-    function updateExportBtn() {
-      exportBtn.classList.toggle('visible', pins.length > 0);
+    function addRow() {
+      const boat = getActiveBoat();
+      boat.findings.push({ rag: '', photo: '', company: '', compartment: '', unit: '', highLevelTheme: '', theme: '' });
+      save();
+      renderTable();
+      const rows = tbody.querySelectorAll('tr');
+      const lastRow = rows[rows.length - 1];
+      if (lastRow) {
+        const firstInput = lastRow.querySelector('.cell-input');
+        if (firstInput) firstInput.focus();
+      }
+      window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
     }
 
+    function save() {
+      saveAll();
+      renderCompartments();
+    }
+
+    // ── CSV export ──
     function exportCSV() {
-      const header = 'Zone,Zone Name,Note,Colour,X%,Y%';
-      const rows = pins.map(p => {
-        const note = '"' + p.note.replace(/"/g, '""') + '"';
-        return [p.zone, '"' + (p.zoneName || '') + '"', note, p.colour, p.x.toFixed(2), p.y.toFixed(2)].join(',');
+      const boat = getActiveBoat();
+      if (boat.findings.length === 0) {
+        showToast('No findings to export');
+        return;
+      }
+      const headers = ['RAG', 'Photo', 'Company', 'Compartment', 'Unit', 'High Level Theme', 'Theme'];
+      const keys = ['rag', 'photo', 'company', 'compartment', 'unit', 'highLevelTheme', 'theme'];
+      const rows = boat.findings.map(f => {
+        return keys.map(k => {
+          const val = (f[k] || '').toString();
+          if (val.includes(',') || val.includes('"') || val.includes('\n')) {
+            return '"' + val.replace(/"/g, '""') + '"';
+          }
+          return val;
+        }).join(',');
       });
-      const csv = header + '\n' + rows.join('\n');
+      const csv = headers.join(',') + '\n' + rows.join('\n');
       const blob = new Blob([csv], { type: 'text/csv' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'woody-notes.csv';
+      a.download = boat.name.replace(/\s+/g, '-').toLowerCase() + '-findings.csv';
       a.click();
       URL.revokeObjectURL(url);
+      showToast('CSV exported');
     }
 
-    updateExportBtn();
-
-    // Scroll to middle on mobile so ship is centred-ish
-    if (isMobile) {
-      viewport.scrollLeft = (vessel.scrollWidth - viewport.clientWidth) / 2;
+    // ── Toast ──
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
     }
+
+    // ── Render all ──
+    function renderAll() {
+      renderBoatSelect();
+      renderCompartments();
+      renderTable();
+    }
+
+    renderAll();
   </script>
 </body>
 </html>
